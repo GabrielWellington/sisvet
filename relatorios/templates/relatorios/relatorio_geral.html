@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Geral - SisVet Promissão</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #000;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .periodo {
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .acoes {
+            margin-bottom: 20px;
+        }
+
+        @media print {
+            .acoes {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="acoes">
+        <button onclick="window.print()">Imprimir / Salvar PDF</button>
+        <a href="/">Voltar</a>
+    </div>
+
+    <div class="cabecalho">
+        <h1>Prefeitura Municipal de Promissão</h1>
+        <h2>Relatório Geral - SisVet Promissão</h2>
+    </div>
+
+    <p class="periodo">
+        Período:
+        {% if data_inicio %} {{ data_inicio }} {% else %} início {% endif %}
+        até
+        {% if data_fim %} {{ data_fim }} {% else %} hoje {% endif %}
+    </p>
+
+    <h2>Atendimentos</h2>
+    <table>
+        <tr>
+            <th>Indicador</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td>Total de atendimentos</td>
+            <td>{{ total_atendimentos }}</td>
+        </tr>
+    </table>
+
+    <h2>Castrações</h2>
+    <table>
+        <tr>
+            <th>Indicador</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td>Total de castrações</td>
+            <td>{{ total_castracoes }}</td>
+        </tr>
+        <tr>
+            <td>Castrações realizadas</td>
+            <td>{{ total_realizadas }}</td>
+        </tr>
+        <tr>
+            <td>Faltas</td>
+            <td>{{ total_faltas }}</td>
+        </tr>
+    </table>
+
+    <h2>Vacinação contra raiva</h2>
+    <table>
+        <tr>
+            <th>Espécie</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td>Cães</td>
+            <td>{{ total_caes_vacinados }}</td>
+        </tr>
+        <tr>
+            <td>Gatos</td>
+            <td>{{ total_gatos_vacinados }}</td>
+        </tr>
+        <tr>
+            <td>Outros</td>
+            <td>{{ total_outros_vacinados }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total geral</strong></td>
+            <td><strong>{{ total_vacinados }}</strong></td>
+        </tr>
+    </table>
+
+    <h2>Visitas</h2>
+    <table>
+        <tr>
+            <th>Indicador</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td>Total de visitas</td>
+            <td>{{ total_visitas }}</td>
+        </tr>
+        <tr>
+            <td>Zona rural</td>
+            <td>{{ visitas_rural }}</td>
+        </tr>
+        <tr>
+            <td>Zona urbana</td>
+            <td>{{ visitas_urbana }}</td>
+        </tr>
+        <tr>
+            <td>Casas fechadas</td>
+            <td>{{ visitas_casa_fechada }}</td>
+        </tr>
+    </table>
+
+</body>
+</html>

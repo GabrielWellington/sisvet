@@ -1,0 +1,341 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Detalhes de Castrações - SisVet Promissão{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .dashboard-container { padding: 20px; max-width: 100%; }
+    .dashboard-titulo { color: #a78bfa; margin-bottom: 25px; font-size: 26px; }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .card-contador {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+        border-left: 4px solid #a78bfa;
+        padding: 18px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .card-contador.verde { border-left-color: #4ade80; }
+    .card-contador.amarelo { border-left-color: #facc15; }
+    .card-contador.vermelho { border-left-color: #ef4444; }
+    .card-contador.azul { border-left-color: #60a5fa; }
+    .card-contador.cinza { border-left-color: #888; }
+
+    .card-contador .titulo {
+        font-size: 13px;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .card-contador .valor {
+        font-size: 32px;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .card-destaque {
+        background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+        color: #000;
+        padding: 25px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .card-destaque.alerta {
+        background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+    }
+
+    .card-destaque.ruim {
+        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        color: #fff;
+    }
+
+    .card-destaque .titulo {
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    .card-destaque .valor {
+        font-size: 48px;
+        font-weight: bold;
+    }
+
+    .graficos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .grafico-card {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .grafico-card h3 {
+        color: #a78bfa;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+    }
+
+    .grafico-card canvas { max-height: 280px; }
+
+    .listas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+    }
+
+    .lista-card {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .lista-card h3 {
+        color: #a78bfa;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+    }
+
+    .lista-card table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .lista-card th {
+        text-align: left;
+        padding: 8px;
+        color: #4ade80;
+        border-bottom: 1px solid #444;
+    }
+
+    .lista-card td {
+        padding: 8px;
+        border-bottom: 1px solid #333;
+        color: #e0e0e0;
+    }
+
+    .lista-card tr:hover { background: #333; }
+
+    .vazio {
+        color: #888;
+        font-style: italic;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #60a5fa;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .voltar:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <a href="/" class="voltar">← Voltar ao Dashboard</a>
+    <h1 class="dashboard-titulo">✂️ Detalhes de Castrações</h1>
+
+    <!-- Card destaque: taxa de comparecimento -->
+    {% if taxa_comparecimento >= 80 %}
+        <div class="card-destaque">
+    {% elif taxa_comparecimento >= 50 %}
+        <div class="card-destaque alerta">
+    {% else %}
+        <div class="card-destaque ruim">
+    {% endif %}
+        <div class="titulo">Taxa de comparecimento no mês</div>
+        <div class="valor">{{ taxa_comparecimento }}%</div>
+        <small>{{ compareceram_mes|add:realizadas_mes }} compareceram de {{ compareceram_mes|add:realizadas_mes|add:faltaram_mes }} agendamentos com resultado</small>
+        </div>
+
+    <!-- Cards de contadores -->
+    <div class="cards-grid">
+        <div class="card-contador">
+            <div class="titulo">Total no mês</div>
+            <div class="valor">{{ total_mes }}</div>
+        </div>
+        <div class="card-contador azul">
+            <div class="titulo">Agendadas</div>
+            <div class="valor">{{ agendadas_mes }}</div>
+        </div>
+        <div class="card-contador verde">
+            <div class="titulo">Realizadas</div>
+            <div class="valor">{{ realizadas_mes }}</div>
+        </div>
+        <div class="card-contador verde">
+            <div class="titulo">Compareceram</div>
+            <div class="valor">{{ compareceram_mes }}</div>
+        </div>
+        <div class="card-contador vermelho">
+            <div class="titulo">Faltaram</div>
+            <div class="valor">{{ faltaram_mes }}</div>
+        </div>
+        <div class="card-contador cinza">
+            <div class="titulo">Canceladas</div>
+            <div class="valor">{{ canceladas_mes }}</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="graficos-grid">
+        <div class="grafico-card">
+            <h3>📊 Por espécie e sexo (mês atual)</h3>
+            <canvas id="grafico-especie-sexo"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>🕐 Manhã vs Tarde (mês atual)</h3>
+            <canvas id="grafico-periodo"></canvas>
+        </div>
+
+        <div class="grafico-card" style="grid-column: 1 / -1;">
+            <h3>📈 Histórico — últimos 6 meses (realizadas vs faltas)</h3>
+            <canvas id="grafico-historico"></canvas>
+        </div>
+    </div>
+
+    <!-- Listas -->
+    <div class="listas-grid">
+        <div class="lista-card">
+            <h3>❌ Faltas recentes (últimas 10)</h3>
+            {% if faltas_recentes %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Período</th>
+                            <th>Animal</th>
+                            <th>Tutor</th>
+                            <th>Telefone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in faltas_recentes %}
+                        <tr>
+                            <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
+                            <td>{{ c.get_periodo_display }}</td>
+                            <td>{{ c.animal.nome }}</td>
+                            <td>{{ c.tutor.nome }}</td>
+                            <td>{{ c.tutor.telefone|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="vazio">Nenhuma falta registrada.</p>
+            {% endif %}
+        </div>
+
+        <div class="lista-card">
+            <h3>📅 Próximas castrações agendadas</h3>
+            {% if proximas %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Período</th>
+                            <th>Animal</th>
+                            <th>Tutor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in proximas %}
+                        <tr>
+                            <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
+                            <td>{{ c.get_periodo_display }}</td>
+                            <td>{{ c.animal.nome }}</td>
+                            <td>{{ c.tutor.nome }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="vazio">Nenhuma castração agendada.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#e0e0e0';
+Chart.defaults.borderColor = '#444';
+
+// Por espécie e sexo
+new Chart(document.getElementById('grafico-especie-sexo'), {
+    type: 'bar',
+    data: {
+        labels: ['Cão Macho', 'Cão Fêmea', 'Gato Macho', 'Gato Fêmea'],
+        datasets: [{
+            label: 'Castrações',
+            data: [{{ cao_macho }}, {{ cao_femea }}, {{ gato_macho }}, {{ gato_femea }}],
+            backgroundColor: ['#60a5fa', '#f472b6', '#facc15', '#fb923c'],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+});
+
+// Manhã vs Tarde
+new Chart(document.getElementById('grafico-periodo'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Manhã', 'Tarde'],
+        datasets: [{
+            data: [{{ manha_mes }}, {{ tarde_mes }}],
+            backgroundColor: ['#facc15', '#fb923c'],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+});
+
+// Histórico
+new Chart(document.getElementById('grafico-historico'), {
+    type: 'bar',
+    data: {
+        labels: {{ historico_labels|safe }},
+        datasets: [
+            {
+                label: 'Realizadas',
+                data: {{ historico_realizadas|safe }},
+                backgroundColor: '#4ade80',
+            },
+            {
+                label: 'Faltas',
+                data: {{ historico_faltas|safe }},
+                backgroundColor: '#ef4444',
+            }
+        ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+});
+</script>
+{% endblock %}

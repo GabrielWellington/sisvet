@@ -1,0 +1,365 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Dashboard - SisVet Promissão{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .dashboard-container {
+        padding: 20px;
+        max-width: 100%;
+    }
+
+    .dashboard-titulo {
+        color: #4ade80;
+        margin-bottom: 25px;
+        font-size: 26px;
+    }
+
+    /* Cards de contadores */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .card-contador {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+        border-left: 4px solid #4ade80;
+        padding: 18px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .card-contador.azul { border-left-color: #60a5fa; }
+    .card-contador.amarelo { border-left-color: #facc15; }
+    .card-contador.vermelho { border-left-color: #ef4444; }
+    .card-contador.roxo { border-left-color: #a78bfa; }
+    .card-contador.ciano { border-left-color: #22d3ee; }
+    .card-contador.laranja { border-left-color: #fb923c; }
+    .card-contador.rosa { border-left-color: #f472b6; }
+
+    .card-contador .titulo {
+        font-size: 13px;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .card-contador .valor {
+        font-size: 32px;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    /* Grid de gráficos */
+    .graficos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .grafico-card {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .grafico-card h3 {
+        color: #60a5fa;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+    }
+
+    .grafico-card canvas {
+        max-height: 280px;
+    }
+
+    /* Listas */
+    .listas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+    }
+
+    .lista-card {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .lista-card h3 {
+        color: #60a5fa;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+    }
+
+    .lista-card table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .lista-card th {
+        text-align: left;
+        padding: 8px;
+        color: #4ade80;
+        border-bottom: 1px solid #444;
+    }
+
+    .lista-card td {
+        padding: 8px;
+        border-bottom: 1px solid #333;
+        color: #e0e0e0;
+    }
+
+    .lista-card tr:hover {
+        background: #333;
+    }
+
+    .vazio {
+        color: #888;
+        font-style: italic;
+        padding: 10px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:15px;">
+        <h1 class="dashboard-titulo" style="margin:0;">📊 Dashboard - SisVet Promissão</h1>
+        <form method="get" action="{% url 'relatorio_anual' %}" style="display:flex;gap:10px;align-items:center;">
+            <label style="color:#aaa;">Gerar resumo anual:</label>
+            <select name="ano" style="background:#2a2a2a;color:#fff;border:1px solid #444;padding:6px 10px;border-radius:4px;">
+                {% for ano in anos_disponiveis %}
+                    <option value="{{ ano }}" {% if ano == ano_atual %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" style="background:#4ade80;color:#000;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;">
+                📄 Baixar .docx
+            </button>
+        </form>
+    </div>
+
+    <!-- Cards de contadores -->
+    <div class="cards-grid">
+        <div class="card-contador">
+            <div class="titulo">Atendimentos hoje</div>
+            <div class="valor">{{ atendimentos_hoje }}</div>
+        </div>
+        <div class="card-contador azul">
+            <div class="titulo">Atendimentos no mês</div>
+            <div class="valor">{{ atendimentos_mes }}</div>
+        </div>
+        <div class="card-contador amarelo">
+            <div class="titulo">Castrações hoje</div>
+            <div class="valor">{{ castracoes_hoje }}</div>
+        </div>
+        <div class="card-contador roxo">
+            <div class="titulo">Castrações realizadas (mês)</div>
+            <div class="valor">{{ castracoes_realizadas_mes }}</div>
+        </div>
+        <div class="card-contador ciano">
+            <div class="titulo">Animais ativos</div>
+            <div class="valor">{{ animais_ativos }}</div>
+        </div>
+        <div class="card-contador laranja">
+            <div class="titulo">Tutores cadastrados</div>
+            <div class="valor">{{ tutores_total }}</div>
+        </div>
+        <div class="card-contador rosa">
+            <div class="titulo">Vacinações no mês</div>
+            <div class="valor">{{ vacinacoes_mes }}</div>
+        </div>
+        <div class="card-contador vermelho">
+            <div class="titulo">Óbitos no mês</div>
+            <div class="valor">{{ obitos_mes }}</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="graficos-grid">
+        <div class="grafico-card">
+            <h3>📈 Atendimentos por mês</h3>
+            <canvas id="grafico-atendimentos"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>✂️ Castrações no mês (por status)</h3>
+            <canvas id="grafico-castracoes"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>🐾 Animais por espécie</h3>
+            <canvas id="grafico-especies"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>🦠 Top 5 doenças confirmadas</h3>
+            <canvas id="grafico-doencas"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>💉 Vacinações por tipo</h3>
+            <canvas id="grafico-vacinacoes"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>🏠 Visitas no mês</h3>
+            <div style="display:flex;align-items:center;justify-content:center;height:280px;flex-direction:column;">
+                <div style="font-size:64px;color:#4ade80;">{{ visitas_mes }}</div>
+                <div style="color:#aaa;margin-top:10px;">visitas realizadas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listas -->
+    <div class="listas-grid">
+        <div class="lista-card">
+            <h3>📅 Próximas castrações (próximos 7 dias)</h3>
+            {% if proximas_castracoes %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Período</th>
+                            <th>Animal</th>
+                            <th>Tutor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in proximas_castracoes %}
+                        <tr>
+                            <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
+                            <td>{{ c.get_periodo_display }}</td>
+                            <td>{{ c.animal.nome }}</td>
+                            <td>{{ c.tutor.nome }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="vazio">Nenhuma castração agendada nos próximos 7 dias.</p>
+            {% endif %}
+        </div>
+
+        <div class="lista-card">
+            <h3>🩺 Últimos atendimentos</h3>
+            {% if ultimos_atendimentos %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Animal</th>
+                            <th>Veterinária</th>
+                            <th>Diagnóstico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for at in ultimos_atendimentos %}
+                        <tr>
+                            <td>{{ at.data_atendimento|date:"d/m/Y H:i" }}</td>
+                            <td>{{ at.animal.nome }}</td>
+                            <td>{{ at.veterinaria.get_full_name|default:at.veterinaria.username }}</td>
+                            <td>{{ at.doenca_confirmada.nome|default:at.diagnostico|default:"—"|truncatechars:40 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="vazio">Nenhum atendimento registrado ainda.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#e0e0e0';
+Chart.defaults.borderColor = '#444';
+
+// Atendimentos por mês (linha)
+new Chart(document.getElementById('grafico-atendimentos'), {
+    type: 'line',
+    data: {
+        labels: {{ atendimentos_por_mes_labels|safe }},
+        datasets: [{
+            label: 'Atendimentos',
+            data: {{ atendimentos_por_mes_valores|safe }},
+            borderColor: '#4ade80',
+            backgroundColor: 'rgba(74, 222, 128, 0.15)',
+            tension: 0.3,
+            fill: true,
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+});
+
+// Castrações por status (barra)
+new Chart(document.getElementById('grafico-castracoes'), {
+    type: 'bar',
+    data: {
+        labels: {{ castracoes_status_labels|safe }},
+        datasets: [{
+            label: 'Castrações',
+            data: {{ castracoes_status_valores|safe }},
+            backgroundColor: ['#facc15', '#22d3ee', '#ef4444', '#4ade80', '#aaa'],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+});
+
+// Animais por espécie (rosca)
+new Chart(document.getElementById('grafico-especies'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ animais_especies_labels|safe }},
+        datasets: [{
+            data: {{ animais_especies_valores|safe }},
+            backgroundColor: ['#60a5fa', '#facc15', '#a78bfa'],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+});
+
+// Doenças (horizontal bar)
+new Chart(document.getElementById('grafico-doencas'), {
+    type: 'bar',
+    data: {
+        labels: {{ doencas_ranking_labels|safe }},
+        datasets: [{
+            label: 'Casos',
+            data: {{ doencas_ranking_valores|safe }},
+            backgroundColor: '#ef4444',
+        }]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+});
+
+// Vacinações por tipo (rosca)
+new Chart(document.getElementById('grafico-vacinacoes'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ vacinacoes_tipos_labels|safe }},
+        datasets: [{
+            data: {{ vacinacoes_tipos_valores|safe }},
+            backgroundColor: ['#4ade80', '#fb923c', '#f472b6'],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,504 @@
+/* ===== SISVET PROMISSÃO - TEMA CLARO MÉDICO (suave) ===== */
+/* Paleta:
+   - Teal principal: #2ba5a0
+   - Teal escuro (hover/ativo): #1f8783
+   - Teal claro (bg sutil): #e8f3f2
+   - Fundo geral: #eef2f5 (cinza muito claro)
+   - Cards: #ffffff
+   - Sidebar: #f7f9fb
+   - Bordas: #d6dee3
+*/
+
+/* ===== FONTE ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body,
+.wrapper,
+.main-sidebar,
+.content-wrapper,
+.main-header,
+input, select, textarea, button {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    color: #2c3e50;
+}
+
+/* ===== FUNDO PRINCIPAL ===== */
+body, .wrapper, .content-wrapper {
+    background-color: #e3e9ed !important;
+}
+
+/* ===== TOPO (NAVBAR) ===== */
+.main-header.navbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #d6dee3 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.main-header.navbar .nav-link,
+.main-header.navbar a {
+    color: #2c3e50 !important;
+    font-weight: 500;
+}
+
+.main-header.navbar .nav-link:hover {
+    color: #2ba5a0 !important;
+}
+
+/* ===== LOGO / BRAND ===== */
+.brand-link {
+    background: #ffffff !important;
+    border-bottom: 1px solid #d6dee3 !important;
+    padding: 14px 16px !important;
+}
+
+.brand-link .brand-image,
+.brand-link img {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    max-height: 36px;
+    margin-right: 8px;
+    opacity: 1;
+}
+
+.brand-link .brand-text {
+    color: #2ba5a0 !important;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+}
+
+
+/* ===== SIDEBAR ===== */
+.main-sidebar,
+.sidebar-dark-success,
+.sidebar-dark-teal,
+.sidebar-dark-primary,
+.sidebar-light-success {
+    background-color: #ffffff !important;
+    border-right: 1px solid #c8d2d8 !important;
+    box-shadow: 1px 0 3px rgba(0,0,0,0.04);
+}
+
+.main-sidebar .sidebar {
+    background-color: #ffffff !important;
+}
+
+/* Links da sidebar */
+.nav-sidebar .nav-link {
+    color: #1a202c !important;
+    border-radius: 6px;
+    margin: 2px 8px;
+    padding: 10px 14px;
+    transition: all 0.15s ease;
+    font-weight: 500;
+}
+
+.nav-sidebar .nav-link p {
+    color: #1a202c !important;
+    font-weight: 500;
+}
+
+/* Hover */
+.nav-sidebar .nav-link:hover {
+    background-color: #e8f3f2 !important;
+    color: #0d5856 !important;
+}
+
+.nav-sidebar .nav-link:hover p {
+    color: #0d5856 !important;
+}
+
+/* ===== FORÇA MÁXIMA FINAL: ATIVO SEMPRE VENCE ===== */
+html body .app-sidebar a.nav-link.active,
+html body .main-sidebar a.nav-link.active,
+html body aside.main-sidebar .nav-sidebar a.nav-link.active,
+html body .sidebar a.nav-link.active {
+    background-color: #0d5856 !important;
+    background: #0d5856 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+html body .app-sidebar a.nav-link.active p,
+html body .main-sidebar a.nav-link.active p,
+html body aside.main-sidebar .nav-sidebar a.nav-link.active p,
+html body .sidebar a.nav-link.active p {
+    color: #ffffff !important;
+}
+
+html body .app-sidebar a.nav-link.active i,
+html body .main-sidebar a.nav-link.active i,
+html body aside.main-sidebar .nav-sidebar a.nav-link.active i,
+html body .sidebar a.nav-link.active i {
+    color: #ffffff !important;
+}
+
+/* Ícones da sidebar */
+.nav-sidebar .nav-link i {
+    color: #2ba5a0 !important;
+}
+
+/* Headers de seção */
+.nav-header {
+    color: #4a5568 !important;
+    background-color: transparent !important;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    padding: 14px 16px 6px 16px !important;
+    border-top: 1px solid #d6dee3;
+    margin-top: 8px;
+}
+
+.nav-header:first-of-type {
+    border-top: none;
+    margin-top: 0;
+}
+
+/* User panel */
+.user-panel {
+    border-bottom: 1px solid #d6dee3 !important;
+    background: #f7f9fb;
+    padding: 12px;
+}
+
+.user-panel .info a {
+    color: #1a202c !important;
+    font-weight: 600;
+} 
+
+/* ===== CARDS ===== */
+.card {
+    border: 1px solid #d6dee3 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    background-color: #ffffff !important;
+}
+
+.card-header {
+    background: #ffffff !important;
+    color: #2c3e50 !important;
+    border-bottom: 2px solid #2ba5a0 !important;
+}
+
+.card-header h3,
+.card-header .card-title {
+    color: #2c3e50 !important;
+    font-weight: 600;
+}
+
+/* ===== CONTEÚDO PRINCIPAL ===== */
+.content-header h1 {
+    color: #2c3e50 !important;
+    font-weight: 600;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background: transparent !important;
+}
+
+.breadcrumb-item a {
+    color: #2ba5a0 !important;
+    font-weight: 500;
+}
+
+.breadcrumb-item.active {
+    color: #6b7d8c !important;
+}
+
+/* ===== TABELAS / LISTAGENS ===== */
+.results, #result_list, .table {
+    background: #ffffff !important;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #d6dee3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+table.table thead th,
+.table th a,
+.table th,
+#result_list thead th a {
+    color: #1f8783 !important;
+    background: #e8f3f2 !important;
+    border-bottom: 2px solid #c8e0de !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+table.table td,
+#result_list td {
+    border-color: #e8eef1 !important;
+    color: #2c3e50;
+}
+
+table.table tbody tr:hover {
+    background-color: #f7f9fb !important;
+}
+
+/* ===== BOTÕES ===== */
+.btn-success,
+.btn-primary {
+    background-color: #2ba5a0 !important;
+    border-color: #2ba5a0 !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.btn-success:hover,
+.btn-primary:hover {
+    background-color: #1f8783 !important;
+    border-color: #1f8783 !important;
+}
+
+.btn-info {
+    background-color: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    border-radius: 6px;
+}
+
+.btn-info:hover {
+    background-color: #0ea5e9 !important;
+    border-color: #0ea5e9 !important;
+}
+
+/* Botão "Adicionar +" */
+.object-tools a.addlink {
+    background-color: #2ba5a0 !important;
+    color: #ffffff !important;
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 8px 16px;
+}
+
+.object-tools a.addlink:hover {
+    background-color: #1f8783 !important;
+}
+
+/* Botão Salvar */
+.submit-row input[type="submit"].default {
+    background-color: #2ba5a0 !important;
+    color: #ffffff !important;
+    border-color: #2ba5a0 !important;
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 10px 20px;
+}
+
+.submit-row input[type="submit"].default:hover {
+    background-color: #1f8783 !important;
+}
+
+/* ===== LINKS ===== */
+a {
+    color: #2ba5a0;
+}
+
+a:hover {
+    color: #1f8783;
+}
+
+/* ===== FORMULÁRIOS ===== */
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #c8d2d8 !important;
+    color: #2c3e50 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #2ba5a0 !important;
+    box-shadow: 0 0 0 3px rgba(43, 165, 160, 0.15) !important;
+    outline: none !important;
+}
+
+label {
+    color: #2c3e50 !important;
+    font-weight: 500;
+}
+
+/* ===== FILTROS LATERAIS ===== */
+#changelist-filter {
+    background: #ffffff !important;
+    border: 1px solid #d6dee3 !important;
+    border-radius: 8px;
+}
+
+#changelist-filter h2,
+#changelist-filter h3 {
+    background: #2ba5a0 !important;
+    color: #ffffff !important;
+    padding: 10px 14px;
+    border-radius: 6px 6px 0 0;
+    font-weight: 600;
+}
+
+#changelist-filter li.selected a {
+    color: #1f8783 !important;
+    font-weight: 600;
+}
+
+#changelist-filter li a {
+    color: #4a5568 !important;
+}
+
+#changelist-filter li a:hover {
+    color: #2ba5a0 !important;
+}
+
+/* ===== FIELDSETS (blocos do formulário) ===== */
+fieldset.module {
+    background: #ffffff !important;
+    border: 1px solid #d6dee3 !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px !important;
+    overflow: hidden;
+}
+
+fieldset.module h2 {
+    background: #2ba5a0 !important;
+    color: #ffffff !important;
+    padding: 12px 16px !important;
+    font-weight: 600;
+    margin: 0 !important;
+}
+
+/* ===== TABS ===== */
+.nav-tabs {
+    border-bottom: 2px solid #d6dee3;
+}
+
+.nav-tabs .nav-link {
+    color: #4a5568 !important;
+    border: none !important;
+    font-weight: 500;
+    padding: 10px 16px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #2ba5a0 !important;
+    background: #f7f9fb !important;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: transparent !important;
+    color: #2ba5a0 !important;
+    border-bottom: 3px solid #2ba5a0 !important;
+}
+
+/* ===== BADGES ===== */
+.badge-success {
+    background-color: #2ba5a0 !important;
+}
+
+.badge-info {
+    background-color: #38bdf8 !important;
+}
+
+/* ===== AÇÕES RECENTES ===== */
+.module h2,
+.module caption {
+    background: #2ba5a0 !important;
+    color: #ffffff !important;
+}
+
+/* ===== DASHBOARD CUSTOMIZADO ===== */
+.dashboard-container {
+    background: transparent !important;
+}
+
+.dashboard-titulo {
+    color: #1f8783 !important;
+}
+
+.card-contador {
+    background: #ffffff !important;
+    border: 1px solid #d6dee3 !important;
+    color: #2c3e50 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-contador .titulo {
+    color: #6b7d8c !important;
+}
+
+.card-contador .valor {
+    color: #2c3e50 !important;
+}
+
+.grafico-card,
+.lista-card {
+    background: #ffffff !important;
+    border: 1px solid #d6dee3 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.grafico-card h3,
+.lista-card h3 {
+    color: #1f8783 !important;
+    border-bottom-color: #e0e6ea !important;
+}
+
+.lista-card th {
+    color: #1f8783 !important;
+}
+
+.lista-card td {
+    color: #2c3e50 !important;
+    border-bottom-color: #e8eef1 !important;
+}
+
+.lista-card tr:hover {
+    background: #f7f9fb !important;
+}
+
+/* ===== DARK MODE TOGGLE - esconder ===== */
+.dark-mode-toggle {
+    display: none !important;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #eef2f5;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2ba5a0;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1f8783;
+}
+
+/* ===== TEXTO GERAL MELHORADO ===== */
+p, span, div {
+    color: inherit;
+}
+
+.content-wrapper > .content {
+    padding: 20px;
+}
