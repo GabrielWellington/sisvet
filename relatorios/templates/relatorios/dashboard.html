@@ -10,10 +10,49 @@
         max-width: 100%;
     }
 
-    .dashboard-titulo {
-        color: #4ade80;
+    .dashboard-banner {
+        background: linear-gradient(120deg, #0f5132 0%, #14532d 50%, #166534 100%);
+        border-radius: 12px;
+        padding: 22px 28px;
         margin-bottom: 25px;
-        font-size: 26px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .dashboard-titulo {
+        color: #fff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .dashboard-subtitulo {
+        color: #bbf7d0;
+        margin: 4px 0 0 0;
+        font-size: 14px;
+    }
+
+    .filtro-form select, .filtro-form button {
+        background: rgba(0,0,0,0.35);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.25);
+        padding: 7px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .filtro-form button {
+        background: #4ade80;
+        color: #052e16;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+    }
+
+    .filtro-form label {
+        color: #d1fae5;
+        font-size: 13px;
     }
 
     /* Cards de contadores */
@@ -111,6 +150,21 @@
         font-size: 13px;
     }
 
+    .lista-card .tabela-scroll {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    .badge-total {
+        background: #ef4444;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 2px 10px;
+        border-radius: 999px;
+        margin-left: 8px;
+    }
+
     .lista-card th {
         text-align: left;
         padding: 8px;
@@ -139,18 +193,50 @@
 
 {% block content %}
 <div class="dashboard-container">
-   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:15px;">
-        <h1 class="dashboard-titulo" style="margin:0;">📊 Dashboard - SisVet Promissão</h1>
-        <form method="get" action="{% url 'relatorio_anual' %}" style="display:flex;gap:10px;align-items:center;">
-            <label style="color:#aaa;">Gerar resumo anual:</label>
-            <select name="ano" style="background:#2a2a2a;color:#fff;border:1px solid #444;padding:6px 10px;border-radius:4px;">
-                {% for ano in anos_disponiveis %}
-                    <option value="{{ ano }}" {% if ano == ano_atual %}selected{% endif %}>{{ ano }}</option>
+    <div class="dashboard-banner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:15px;">
+            <div>
+                <h1 class="dashboard-titulo">📊 Dashboard — SisVet Promissão</h1>
+                <p class="dashboard-subtitulo">
+                    Exibindo dados de {{ mes_nome_selecionado }}/{{ ano_selecionado }}
+                </p>
+            </div>
+            <form method="get" action="{% url 'relatorio_anual' %}" style="display:flex;gap:10px;align-items:center;">
+                <label>Resumo anual:</label>
+                <select name="ano" style="background:#2a2a2a;color:#fff;border:1px solid #444;padding:6px 10px;border-radius:4px;">
+                    {% for ano in anos_disponiveis %}
+                        <option value="{{ ano }}" {% if ano == ano_atual %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" style="background:#4ade80;color:#000;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;">
+                    📄 Baixar .docx
+                </button>
+            </form>
+        </div>
+
+        <form method="get" class="filtro-form" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.15);">
+            <label>Mês:</label>
+            <select name="mes">
+                {% for num, nome in meses_nomes %}
+                    <option value="{{ num }}" {% if num == mes_selecionado %}selected{% endif %}>{{ nome }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" style="background:#4ade80;color:#000;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;">
-                📄 Baixar .docx
-            </button>
+
+            <label>Ano:</label>
+            <select name="ano">
+                {% for ano in anos_disponiveis %}
+                    <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Histórico dos gráficos:</label>
+            <select name="meses">
+                <option value="3" {% if meses_historico_selecionado == 3 %}selected{% endif %}>Últimos 3 meses</option>
+                <option value="6" {% if meses_historico_selecionado == 6 %}selected{% endif %}>Últimos 6 meses</option>
+                <option value="12" {% if meses_historico_selecionado == 12 %}selected{% endif %}>Últimos 12 meses</option>
+            </select>
+
+            <button type="submit">🔍 Filtrar</button>
         </form>
     </div>
 
@@ -281,6 +367,40 @@
                 </table>
             {% else %}
                 <p class="vazio">Nenhum atendimento registrado ainda.</p>
+            {% endif %}
+        </div>
+
+        <div class="lista-card" style="grid-column: 1 / -1;">
+            <h3>🚫 Faltas em {{ mes_nome_selecionado }}/{{ ano_selecionado }}
+                <span class="badge-total">{{ total_faltas_do_mes }}</span>
+            </h3>
+            {% if faltas_do_mes %}
+                <div class="tabela-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data agendada</th>
+                                <th>Período</th>
+                                <th>Animal</th>
+                                <th>Tutor</th>
+                                <th>Telefone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in faltas_do_mes %}
+                            <tr>
+                                <td>{{ f.data_agendada|date:"d/m/Y" }}</td>
+                                <td>{{ f.get_periodo_display }}</td>
+                                <td>{{ f.animal.nome }}</td>
+                                <td>{{ f.tutor.nome }}</td>
+                                <td>{{ f.tutor.telefone|default:"—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="vazio">Nenhuma falta registrada em {{ mes_nome_selecionado }}/{{ ano_selecionado }}.</p>
             {% endif %}
         </div>
     </div>

@@ -24,27 +24,51 @@ import io
 @login_required
 def dashboard(request):
     hoje = timezone.now().date()
-    inicio_mes = hoje.replace(day=1)
-    seis_meses_atras = (hoje.replace(day=1) - timedelta(days=180)).replace(day=1)
     proximos_7_dias = hoje + timedelta(days=7)
 
+    # --- Período selecionado (mês/ano de referência para os cartões e status) ---
+    try:
+        ano_ref = int(request.GET.get('ano', hoje.year))
+        mes_ref = int(request.GET.get('mes', hoje.month))
+        inicio_mes = date(ano_ref, mes_ref, 1)
+    except (ValueError, TypeError):
+        ano_ref, mes_ref = hoje.year, hoje.month
+        inicio_mes = hoje.replace(day=1)
+
+    if mes_ref == 12:
+        fim_mes = date(ano_ref + 1, 1, 1) - timedelta(days=1)
+    else:
+        fim_mes = date(ano_ref, mes_ref + 1, 1) - timedelta(days=1)
+
+    # --- Quantidade de meses no gráfico de histórico ---
+    try:
+        qtd_meses_historico = int(request.GET.get('meses', 6))
+        if qtd_meses_historico not in (3, 6, 12):
+            qtd_meses_historico = 6
+    except (ValueError, TypeError):
+        qtd_meses_historico = 6
+
+    inicio_historico = (inicio_mes - timedelta(days=30 * qtd_meses_historico)).replace(day=1)
+
     atendimentos_hoje = Atendimento.objects.filter(data_atendimento__date=hoje).count()
-    atendimentos_mes = Atendimento.objects.filter(data_atendimento__date__gte=inicio_mes).count()
+    atendimentos_mes = Atendimento.objects.filter(
+        data_atendimento__date__gte=inicio_mes, data_atendimento__date__lte=fim_mes
+    ).count()
     castracoes_hoje = Castracao.objects.filter(data_agendada=hoje).count()
     castracoes_realizadas_mes = Castracao.objects.filter(
-        data_agendada__gte=inicio_mes, status='REALIZADA'
+        data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='REALIZADA'
     ).count()
     animais_ativos = Animal.objects.filter(status='ATIVO').count()
     tutores_total = Tutor.objects.count()
-    obitos_mes = ObitoAnimal.objects.filter(data_obito__gte=inicio_mes).count()
-    visitas_mes = Visita.objects.filter(data_visita__gte=inicio_mes).count()
+    obitos_mes = ObitoAnimal.objects.filter(data_obito__gte=inicio_mes, data_obito__lte=fim_mes).count()
+    visitas_mes = Visita.objects.filter(data_visita__gte=inicio_mes, data_visita__lte=fim_mes).count()
 
-    boletins_mes = BoletimVacinacaoRaiva.objects.filter(data__gte=inicio_mes)
+    boletins_mes = BoletimVacinacaoRaiva.objects.filter(data__gte=inicio_mes, data__lte=fim_mes)
     vacinacoes_mes = sum(b.total for b in boletins_mes)
 
     atendimentos_por_mes = OrderedDict()
-    mes_atual = seis_meses_atras
-    while mes_atual <= hoje:
+    mes_atual = inicio_historico
+    while mes_atual <= inicio_mes:
         chave = mes_atual.strftime('%m/%Y')
         atendimentos_por_mes[chave] = 0
         if mes_atual.month == 12:
@@ -52,18 +76,18 @@ def dashboard(request):
         else:
             mes_atual = mes_atual.replace(month=mes_atual.month + 1)
 
-    atendimentos_qs = Atendimento.objects.filter(data_atendimento__gte=seis_meses_atras)
+    atendimentos_qs = Atendimento.objects.filter(data_atendimento__gte=inicio_historico)
     for at in atendimentos_qs:
         chave = at.data_atendimento.strftime('%m/%Y')
         if chave in atendimentos_por_mes:
             atendimentos_por_mes[chave] += 1
 
     castracoes_status = {
-        'Agendada': Castracao.objects.filter(data_agendada__gte=inicio_mes, status='AGENDADA').count(),
-        'Compareceu': Castracao.objects.filter(data_agendada__gte=inicio_mes, status='COMPARECEU').count(),
-        'Faltou': Castracao.objects.filter(data_agendada__gte=inicio_mes, status='FALTOU').count(),
-        'Realizada': Castracao.objects.filter(data_agendada__gte=inicio_mes, status='REALIZADA').count(),
-        'Cancelada': Castracao.objects.filter(data_agendada__gte=inicio_mes, status='CANCELADA').count(),
+        'Agendada': Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='AGENDADA').count(),
+        'Compareceu': Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='COMPARECEU').count(),
+        'Faltou': Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='FALTOU').count(),
+        'Realizada': Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='REALIZADA').count(),
+        'Cancelada': Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='CANCELADA').count(),
     }
 
     animais_especies = {
@@ -95,8 +119,19 @@ def dashboard(request):
         'animal', 'veterinaria', 'doenca_confirmada'
     ).order_by('-data_atendimento')[:5]
 
+    # --- Todas as faltas do mês selecionado (sem limite de 10) ---
+    faltas_do_mes = Castracao.objects.filter(
+        data_agendada__gte=inicio_mes, data_agendada__lte=fim_mes, status='FALTOU'
+    ).select_related('animal', 'tutor').order_by('data_agendada', 'periodo')
+
+    meses_nomes = [
+        (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'), (4, 'Abril'),
+        (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
+        (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro'),
+    ]
+    mes_nome_selecionado = dict(meses_nomes).get(mes_ref, '')
+
     contexto = {
-        'atendimentos_hoje': atendimentos_hoje,
         'atendimentos_mes': atendimentos_mes,
         'castracoes_hoje': castracoes_hoje,
         'castracoes_realizadas_mes': castracoes_realizadas_mes,
@@ -117,8 +152,16 @@ def dashboard(request):
         'vacinacoes_tipos_valores': list(vacinacoes_tipos.values()),
         'proximas_castracoes': proximas_castracoes,
         'ultimos_atendimentos': ultimos_atendimentos,
+        'faltas_do_mes': faltas_do_mes,
+        'total_faltas_do_mes': faltas_do_mes.count(),
         'ano_atual': hoje.year,
         'anos_disponiveis': list(range(hoje.year, hoje.year - 5, -1)),
+        # período selecionado, para o formulário de filtro
+        'mes_selecionado': mes_ref,
+        'ano_selecionado': ano_ref,
+        'meses_historico_selecionado': qtd_meses_historico,
+        'meses_nomes': meses_nomes,
+        'mes_nome_selecionado': mes_nome_selecionado,
     }
 
     return render(request, 'relatorios/dashboard.html', contexto)
@@ -129,13 +172,37 @@ def relatorio_geral(request):
     return render(request, 'relatorios/relatorio_geral.html', {})
 
 
+MESES_NOMES = [
+    '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+]
+
+
 @login_required
 def detalhes_castracoes(request):
     hoje = timezone.now().date()
-    inicio_mes = hoje.replace(day=1)
-    seis_meses_atras = (hoje.replace(day=1) - timedelta(days=180)).replace(day=1)
 
-    castracoes_mes = Castracao.objects.filter(data_agendada__gte=inicio_mes)
+    # Mês/ano escolhido pelo usuário via ?mes=8&ano=2026, com o mês atual como padrão
+    try:
+        mes_selecionado = int(request.GET.get('mes', hoje.month))
+        ano_selecionado = int(request.GET.get('ano', hoje.year))
+        if mes_selecionado < 1 or mes_selecionado > 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        mes_selecionado = hoje.month
+        ano_selecionado = hoje.year
+
+    inicio_mes = date(ano_selecionado, mes_selecionado, 1)
+    if mes_selecionado == 12:
+        fim_mes = date(ano_selecionado + 1, 1, 1)
+    else:
+        fim_mes = date(ano_selecionado, mes_selecionado + 1, 1)
+
+    seis_meses_atras = (inicio_mes - timedelta(days=180)).replace(day=1)
+
+    anos_disponiveis = list(range(hoje.year, hoje.year - 5, -1))
+
+    castracoes_mes = Castracao.objects.filter(data_agendada__gte=inicio_mes, data_agendada__lt=fim_mes)
     total_mes = castracoes_mes.count()
     agendadas_mes = castracoes_mes.filter(status='AGENDADA').count()
     compareceram_mes = castracoes_mes.filter(status='COMPARECEU').count()
@@ -179,14 +246,19 @@ def detalhes_castracoes(request):
             elif c.status == 'FALTOU':
                 historico[chave]['faltas'] += 1
 
-    faltas_recentes = Castracao.objects.filter(
-        status='FALTOU'
-    ).select_related('animal', 'tutor').order_by('-data_agendada')[:10]
+    faltas_do_mes = Castracao.objects.filter(
+        data_agendada__gte=inicio_mes, data_agendada__lt=fim_mes, status='FALTOU'
+    ).select_related('animal', 'tutor').order_by('data_agendada', 'periodo')
 
     proximas = Castracao.objects.filter(
         data_agendada__gte=hoje,
         status='AGENDADA'
     ).select_related('animal', 'tutor').order_by('data_agendada', 'periodo')[:15]
+
+    meses_nomes_pt = {
+        1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho',
+        7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro',
+    }
 
     contexto = {
         'total_mes': total_mes,
@@ -205,8 +277,14 @@ def detalhes_castracoes(request):
         'historico_labels': list(historico.keys()),
         'historico_realizadas': [h['realizadas'] for h in historico.values()],
         'historico_faltas': [h['faltas'] for h in historico.values()],
-        'faltas_recentes': faltas_recentes,
+        'faltas_do_mes': faltas_do_mes,
+        'total_faltas_do_mes': faltas_do_mes.count(),
         'proximas': proximas,
+        'mes_selecionado': mes_selecionado,
+        'ano_selecionado': ano_selecionado,
+        'mes_nome_selecionado': meses_nomes_pt.get(mes_selecionado, ''),
+        'anos_disponiveis': anos_disponiveis,
+        'meses_nomes': sorted(meses_nomes_pt.items()),
     }
 
     return render(request, 'relatorios/detalhes_castracoes.html', contexto)

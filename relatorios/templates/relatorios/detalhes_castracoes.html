@@ -164,6 +164,22 @@
     <a href="/" class="voltar">← Voltar ao Dashboard</a>
     <h1 class="dashboard-titulo">✂️ Detalhes de Castrações</h1>
 
+    <form method="get" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:#1e1e1e;padding:14px 18px;border-radius:8px;border:1px solid #333;">
+        <label style="color:#ccc;font-size:13px;">Mês:</label>
+        <select name="mes" style="background:#2a2a2a;color:#fff;border:1px solid #444;padding:6px 10px;border-radius:4px;">
+            {% for num, nome in meses_nomes %}
+                <option value="{{ num }}" {% if num == mes_selecionado %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+        </select>
+        <label style="color:#ccc;font-size:13px;">Ano:</label>
+        <select name="ano" style="background:#2a2a2a;color:#fff;border:1px solid #444;padding:6px 10px;border-radius:4px;">
+            {% for ano in anos_disponiveis %}
+                <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" style="background:#4ade80;color:#052e16;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;">🔍 Filtrar</button>
+    </form>
+
     <!-- Card destaque: taxa de comparecimento -->
     {% if taxa_comparecimento >= 80 %}
         <div class="card-destaque">
@@ -205,6 +221,27 @@
         </div>
     </div>
 
+    <!-- Cards de espécie e sexo -->
+    <h3 style="color:#e0e0e0;margin:25px 0 12px 0;">🐾 Castrações realizadas por espécie e sexo</h3>
+    <div class="cards-grid">
+        <div class="card-contador azul">
+            <div class="titulo">🐕 Cães machos</div>
+            <div class="valor">{{ cao_macho }}</div>
+        </div>
+        <div class="card-contador" style="border-left-color:#f472b6;">
+            <div class="titulo">🐕 Cadelas</div>
+            <div class="valor">{{ cao_femea }}</div>
+        </div>
+        <div class="card-contador" style="border-left-color:#facc15;">
+            <div class="titulo">🐈 Gatos machos</div>
+            <div class="valor">{{ gato_macho }}</div>
+        </div>
+        <div class="card-contador" style="border-left-color:#fb923c;">
+            <div class="titulo">🐈 Gatas</div>
+            <div class="valor">{{ gato_femea }}</div>
+        </div>
+    </div>
+
     <!-- Gráficos -->
     <div class="graficos-grid">
         <div class="grafico-card">
@@ -226,8 +263,9 @@
     <!-- Listas -->
     <div class="listas-grid">
         <div class="lista-card">
-            <h3>❌ Faltas recentes (últimas 10)</h3>
-            {% if faltas_recentes %}
+            <h3>❌ Faltas em {{ mes_nome_selecionado }}/{{ ano_selecionado }} ({{ total_faltas_do_mes }})</h3>
+            {% if faltas_do_mes %}
+                <div style="max-height:420px;overflow-y:auto;">
                 <table>
                     <thead>
                         <tr>
@@ -239,7 +277,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for c in faltas_recentes %}
+                        {% for c in faltas_do_mes %}
                         <tr>
                             <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
                             <td>{{ c.get_periodo_display }}</td>
@@ -250,8 +288,9 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             {% else %}
-                <p class="vazio">Nenhuma falta registrada.</p>
+                <p class="vazio">Nenhuma falta registrada em {{ mes_nome_selecionado }}/{{ ano_selecionado }}.</p>
             {% endif %}
         </div>
 
