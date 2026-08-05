@@ -14,6 +14,19 @@ class Tutor(models.Model):
         verbose_name_plural = 'Tutores'
         ordering = ['nome']
 
+    def clean(self):
+        if self.nome:
+            duplicados = Tutor.objects.filter(nome__iexact=self.nome.strip())
+            if self.pk:
+                duplicados = duplicados.exclude(pk=self.pk)
+            if duplicados.exists():
+                raise ValidationError(
+                    f'Já existe um tutor cadastrado com o nome "{self.nome.strip()}". '
+                    f'Busque pelo nome antes de criar um novo, para evitar cadastro duplicado. '
+                    f'Se for realmente uma pessoa diferente com o mesmo nome, adicione um '
+                    f'diferencial no cadastro (ex: apelido, bairro) para distinguir.'
+                )
+
     def __str__(self):
         return self.nome
 
@@ -36,7 +49,7 @@ class Animal(models.Model):
     ]
 
     tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, related_name='animais', verbose_name='Tutor')
-    nome = models.CharField(max_length=100, verbose_name='Nome')
+    nome = models.CharField(max_length=100, blank=True, verbose_name='Nome', help_text='Pode deixar em branco se o animal faltou e o nome ainda não é conhecido.')
     especie = models.CharField(max_length=10, choices=ESPECIE_CHOICES, verbose_name='Espécie')
     especie_outro = models.CharField(max_length=50, blank=True, null=True, verbose_name='Outra espécie')
     sexo = models.CharField(max_length=10, choices=SEXO_CHOICES, verbose_name='Sexo')
@@ -79,7 +92,8 @@ class Animal(models.Model):
 
     def __str__(self):
         especie_display = self.get_especie_display() if self.especie != 'OUTRO' else self.especie_outro or 'Outro'
-        return f'{self.nome} ({especie_display})'
+        nome_exibicao = self.nome if self.nome else f'Sem nome (tutor: {self.tutor.nome})'
+        return f'{nome_exibicao} ({especie_display})'
 
 
 class ObitoAnimal(models.Model):
