@@ -49,7 +49,7 @@ class Animal(models.Model):
     ]
 
     tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, related_name='animais', verbose_name='Tutor')
-    nome = models.CharField(max_length=100, blank=True, verbose_name='Nome', help_text='Pode deixar em branco se o animal faltou e o nome ainda não é conhecido.')
+    nome = models.CharField(max_length=100, blank=True, verbose_name='Nome', help_text='')
     especie = models.CharField(max_length=10, choices=ESPECIE_CHOICES, verbose_name='Espécie')
     especie_outro = models.CharField(max_length=50, blank=True, null=True, verbose_name='Outra espécie')
     sexo = models.CharField(max_length=10, choices=SEXO_CHOICES, verbose_name='Sexo')
@@ -61,6 +61,7 @@ class Animal(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ATIVO', verbose_name='Status')
 
     def clean(self):
+        
         if self.especie == 'OUTRO' and not self.especie_outro:
             raise ValidationError('Informe qual é a espécie quando selecionar "Outro".')
 

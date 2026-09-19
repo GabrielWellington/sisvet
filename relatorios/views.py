@@ -178,19 +178,12 @@ MESES_NOMES = [
 ]
 
 
-@login_required
-def detalhes_castracoes(request):
+def _coleta_dados_castracoes(mes_selecionado, ano_selecionado):
+    """Reúne todos os dados do relatório de castrações de um mês/ano.
+    Usado tanto pela tela (detalhes_castracoes) quanto pela exportação em .docx,
+    para garantir que os dois mostrem exatamente os mesmos números.
+    """
     hoje = timezone.now().date()
-
-    # Mês/ano escolhido pelo usuário via ?mes=8&ano=2026, com o mês atual como padrão
-    try:
-        mes_selecionado = int(request.GET.get('mes', hoje.month))
-        ano_selecionado = int(request.GET.get('ano', hoje.year))
-        if mes_selecionado < 1 or mes_selecionado > 12:
-            raise ValueError
-    except (TypeError, ValueError):
-        mes_selecionado = hoje.month
-        ano_selecionado = hoje.year
 
     inicio_mes = date(ano_selecionado, mes_selecionado, 1)
     if mes_selecionado == 12:
@@ -287,7 +280,217 @@ def detalhes_castracoes(request):
         'meses_nomes': sorted(meses_nomes_pt.items()),
     }
 
+    return contexto
+
+
+@login_required
+def detalhes_castracoes(request):
+    hoje = timezone.now().date()
+
+    # Mês/ano escolhido pelo usuário via ?mes=8&ano=2026, com o mês atual como padrão
+    try:
+        mes_selecionado = int(request.GET.get('mes', hoje.month))
+        ano_selecionado = int(request.GET.get('ano', hoje.year))
+        if mes_selecionado < 1 or mes_selecionado > 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        mes_selecionado = hoje.month
+        ano_selecionado = hoje.year
+
+    contexto = _coleta_dados_castracoes(mes_selecionado, ano_selecionado)
     return render(request, 'relatorios/detalhes_castracoes.html', contexto)
+
+
+@login_required
+def exportar_castracoes_docx(request):
+    """Gera o relatório de castrações do mês/ano filtrado em .docx,
+    espelhando os números mostrados na tela de Detalhes de Castrações.
+    """
+    hoje = timezone.now().date()
+    try:
+        mes_selecionado = int(request.GET.get('mes', hoje.month))
+        ano_selecionado = int(request.GET.get('ano', hoje.year))
+        if mes_selecionado < 1 or mes_selecionado > 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        mes_selecionado = hoje.month
+        ano_selecionado = hoje.year
+
+    d = _coleta_dados_castracoes(mes_selecionado, ano_selecionado)
+    mes_nome = d['mes_nome_selecionado'].upper()
+
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Cm(1.5)
+        section.bottom_margin = Cm(1.5)
+        section.left_margin = Cm(1.5)
+        section.right_margin = Cm(1.5)
+
+    # --- Cabeçalho ---
+    titulo = doc.add_paragraph()
+    titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = titulo.add_run('PREFEITURA MUNICIPAL DE PROMISSÃO')
+    run.bold = True
+    run.font.size = Pt(13)
+
+    sub = doc.add_paragraph()
+    sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = sub.add_run('Centro de Controle de Zoonoses')
+    run.font.size = Pt(11)
+
+    sub2 = doc.add_paragraph()
+    sub2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = sub2.add_run(f'RELATÓRIO DE CASTRAÇÕES — {mes_nome}/{ano_selecionado}')
+    run.bold = True
+    run.font.size = Pt(13)
+    run.font.color.rgb = RGBColor(0x40, 0x40, 0x40)
+
+    emitido = doc.add_paragraph()
+    emitido.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = emitido.add_run(f'Emitido em {timezone.localtime().strftime("%d/%m/%Y às %H:%M")}')
+    run.italic = True
+    run.font.size = Pt(8)
+    run.font.color.rgb = RGBColor(0x80, 0x80, 0x80)
+
+    doc.add_paragraph()
+
+    # --- Resumo do mês (cards) ---
+    _titulo_secao(doc, 'Resumo do mês')
+    resumo_labels = ['Total no mês', 'Agendadas', 'Realizadas', 'Compareceram', 'Faltaram', 'Canceladas']
+    resumo_valores = [
+        d['total_mes'], d['agendadas_mes'], d['realizadas_mes'],
+        d['compareceram_mes'], d['faltaram_mes'], d['canceladas_mes'],
+    ]
+    tabela_resumo = doc.add_table(rows=2, cols=len(resumo_labels))
+    tabela_resumo.style = 'Table Grid'
+    for i, (label, valor) in enumerate(zip(resumo_labels, resumo_valores)):
+        _set_cell_text(tabela_resumo.rows[0].cells[i], label, bold=True, size=8)
+        _sombrear_celula(tabela_resumo.rows[0].cells[i], '2E2E2E')
+        for p in tabela_resumo.rows[0].cells[i].paragraphs:
+            for r in p.runs:
+                r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        _set_cell_text(tabela_resumo.rows[1].cells[i], valor, bold=True, size=13)
+
+    doc.add_paragraph()
+
+    # --- Taxa de comparecimento em destaque ---
+    taxa = d['taxa_comparecimento']
+    cor_taxa = '2E7D32' if taxa >= 80 else ('B8860B' if taxa >= 50 else 'C62828')
+    tabela_taxa = doc.add_table(rows=1, cols=1)
+    cel = tabela_taxa.rows[0].cells[0]
+    _sombrear_celula(cel, cor_taxa)
+    p = cel.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run('TAXA DE COMPARECIMENTO NO MÊS: ')
+    run.bold = True
+    run.font.size = Pt(10)
+    run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    run2 = p.add_run(f'{taxa}%')
+    run2.bold = True
+    run2.font.size = Pt(14)
+    run2.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+
+    doc.add_paragraph()
+
+    # --- Castrações por espécie e sexo ---
+    _titulo_secao(doc, 'Castrações realizadas por espécie e sexo')
+    especie_labels = ['Cães machos', 'Cadelas', 'Gatos machos', 'Gatas']
+    especie_valores = [d['cao_macho'], d['cao_femea'], d['gato_macho'], d['gato_femea']]
+    tabela_especie = doc.add_table(rows=2, cols=4)
+    tabela_especie.style = 'Table Grid'
+    for i, (label, valor) in enumerate(zip(especie_labels, especie_valores)):
+        _set_cell_text(tabela_especie.rows[0].cells[i], label, bold=True, size=8)
+        _sombrear_celula(tabela_especie.rows[0].cells[i])
+        _set_cell_text(tabela_especie.rows[1].cells[i], valor, bold=True, size=13)
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    run = p.add_run(f'Período: {d["manha_mes"]} realizadas pela manhã  •  {d["tarde_mes"]} realizadas à tarde')
+    run.font.size = Pt(9)
+    run.italic = True
+
+    doc.add_paragraph()
+
+    # --- Faltas do mês ---
+    _titulo_secao(doc, f'Faltas em {mes_nome.title()}/{ano_selecionado} ({d["total_faltas_do_mes"]})')
+    faltas = list(d['faltas_do_mes'])
+    if faltas:
+        tabela_faltas = doc.add_table(rows=1 + len(faltas), cols=5)
+        tabela_faltas.style = 'Table Grid'
+        cab = tabela_faltas.rows[0]
+        for i, h in enumerate(['Data', 'Período', 'Animal', 'Tutor', 'Telefone']):
+            _set_cell_text(cab.cells[i], h, bold=True, size=8)
+            _sombrear_celula(cab.cells[i])
+        for i, c in enumerate(faltas, start=1):
+            row = tabela_faltas.rows[i]
+            _set_cell_text(row.cells[0], c.data_agendada.strftime('%d/%m/%Y'), bold=False, size=8)
+            _set_cell_text(row.cells[1], c.get_periodo_display(), bold=False, size=8)
+            _set_cell_text(row.cells[2], c.animal.nome or '—', bold=False, size=8)
+            _set_cell_text(row.cells[3], c.tutor.nome, bold=False, size=8)
+            _set_cell_text(row.cells[4], c.tutor.telefone or '—', bold=False, size=8)
+    else:
+        p = doc.add_paragraph()
+        run = p.add_run(f'Nenhuma falta registrada em {mes_nome.title()}/{ano_selecionado}.')
+        run.italic = True
+        run.font.size = Pt(9)
+
+    doc.add_paragraph()
+
+    # --- Próximas castrações agendadas ---
+    proximas = list(d['proximas'])
+    _titulo_secao(doc, 'Próximas castrações agendadas')
+    if proximas:
+        tabela_prox = doc.add_table(rows=1 + len(proximas), cols=4)
+        tabela_prox.style = 'Table Grid'
+        cab = tabela_prox.rows[0]
+        for i, h in enumerate(['Data', 'Período', 'Animal', 'Tutor']):
+            _set_cell_text(cab.cells[i], h, bold=True, size=8)
+            _sombrear_celula(cab.cells[i])
+        for i, c in enumerate(proximas, start=1):
+            row = tabela_prox.rows[i]
+            _set_cell_text(row.cells[0], c.data_agendada.strftime('%d/%m/%Y'), bold=False, size=8)
+            _set_cell_text(row.cells[1], c.get_periodo_display(), bold=False, size=8)
+            _set_cell_text(row.cells[2], c.animal.nome or '—', bold=False, size=8)
+            _set_cell_text(row.cells[3], c.tutor.nome, bold=False, size=8)
+    else:
+        p = doc.add_paragraph()
+        run = p.add_run('Nenhuma castração agendada.')
+        run.italic = True
+        run.font.size = Pt(9)
+
+    # --- Rodapé / assinatura ---
+    doc.add_paragraph()
+    doc.add_paragraph()
+    assinatura = doc.add_paragraph()
+    assinatura.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = assinatura.add_run('_' * 50)
+    run.font.size = Pt(10)
+    cargo = doc.add_paragraph()
+    cargo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = cargo.add_run('Responsável pelo Setor de Zoonoses')
+    run.font.size = Pt(9)
+
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+
+    response = HttpResponse(
+        buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    nome_arquivo = f'relatorio_castracoes_{mes_selecionado:02d}_{ano_selecionado}.docx'
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    return response
+
+
+def _titulo_secao(doc, texto):
+    p = doc.add_paragraph()
+    run = p.add_run(texto.upper())
+    run.bold = True
+    run.font.size = Pt(11)
+    run.font.color.rgb = RGBColor(0x40, 0x40, 0x40)
+    p.paragraph_format.space_before = Pt(6)
+    p.paragraph_format.space_after = Pt(4)
 
 
 MESES_PT = [

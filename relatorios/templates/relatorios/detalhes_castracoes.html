@@ -178,6 +178,10 @@
             {% endfor %}
         </select>
         <button type="submit" style="background:#4ade80;color:#052e16;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;">🔍 Filtrar</button>
+        <a href="{% url 'exportar_castracoes_docx' %}?mes={{ mes_selecionado }}&ano={{ ano_selecionado }}"
+           style="background:#60a5fa;color:#0b2545;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;text-decoration:none;margin-left:auto;">
+           📄 Baixar relatório (Word)
+        </a>
     </form>
 
     <!-- Card destaque: taxa de comparecimento -->

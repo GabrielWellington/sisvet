@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
-from relatorios.views import dashboard, relatorio_geral, gerar_resumo_anual, detalhes_castracoes
+from relatorios.views import dashboard, relatorio_geral, gerar_resumo_anual, detalhes_castracoes, exportar_castracoes_docx
 
 
 def home(request):
@@ -35,6 +35,7 @@ urlpatterns = [
     
     path('relatorio-anual/', gerar_resumo_anual, name='relatorio_anual'),
     path('detalhes-castracoes/', detalhes_castracoes, name='detalhes_castracoes'),
+    path('detalhes-castracoes/exportar/', exportar_castracoes_docx, name='exportar_castracoes_docx'),
 ]
 
 if settings.DEBUG:
