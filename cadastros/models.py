@@ -149,3 +149,4 @@ class ObitoAnimal(models.Model):
 
     def __str__(self):
         return f'{self.animal.nome} - {self.get_tipo_display()}'
+    

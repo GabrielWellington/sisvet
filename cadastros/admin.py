@@ -162,4 +162,4 @@ class ObitoAnimalAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         if obj.animal and obj.animal.status != 'FALECIDO':
             obj.animal.status = 'FALECIDO'
-            obj.animal.save()
+            obj.animal.save() 
