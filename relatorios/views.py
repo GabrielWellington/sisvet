@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.contrib import admin
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
@@ -297,7 +298,8 @@ def detalhes_castracoes(request):
         mes_selecionado = hoje.month
         ano_selecionado = hoje.year
 
-    contexto = _coleta_dados_castracoes(mes_selecionado, ano_selecionado)
+    contexto = {**admin.site.each_context(request),
+                **_coleta_dados_castracoes(mes_selecionado, ano_selecionado)}
     return render(request, 'relatorios/detalhes_castracoes.html', contexto)
 
 

@@ -502,3 +502,61 @@ p, span, div {
 .content-wrapper > .content {
     padding: 20px;
 }
+/* Contraste dos menus: mantém texto e ícones legíveis em todos os estados. */
+body .main-header.navbar .navbar-nav .nav-link,
+body .main-header.navbar .navbar-nav .nav-link:visited {
+    color: #243746 !important;
+}
+body .main-header.navbar .navbar-nav .nav-link:hover,
+body .main-header.navbar .navbar-nav .nav-link:focus-visible {
+    background: #e8f3f2 !important;
+    color: #0d5856 !important;
+    border-radius: 6px;
+}
+body .main-sidebar .nav-sidebar .nav-link:not(.active),
+body .main-sidebar .nav-sidebar .nav-link:not(.active) p,
+body .main-sidebar .user-panel .info a {
+    color: #243746 !important;
+}
+body .main-sidebar .nav-sidebar .nav-link:not(.active):hover,
+body .main-sidebar .nav-sidebar .nav-link:not(.active):focus-visible {
+    background: #e8f3f2 !important;
+    color: #0d5856 !important;
+}
+body .main-sidebar .nav-sidebar .nav-link.active:hover,
+body .main-sidebar .nav-sidebar .nav-link.active:focus-visible {
+    background: #0d5856 !important;
+    color: #fff !important;
+}
+.main-header .nav-link i, .main-header .nav-link span {
+    color: inherit !important;
+}
+.dropdown-menu {
+    background: #fff;
+    color: #243746;
+}
+body .dropdown-menu .dropdown-item {
+    color: #243746 !important;
+}
+body .dropdown-menu .dropdown-item:hover,
+body .dropdown-menu .dropdown-item:focus {
+    background: #e8f3f2 !important;
+    color: #0d5856 !important;
+}
+body a:focus-visible, body button:focus-visible {
+    outline: 3px solid #0d5856;
+    outline-offset: 3px;
+}
+/* Cores com contraste suficiente para texto branco nos botões. */
+body .btn-primary, body .btn-success, body .object-tools a.addlink {
+    background-color: #167873 !important;
+    border-color: #167873 !important;
+}
+body .btn-info {
+    background-color: #036992 !important;
+    border-color: #036992 !important;
+}
+body .btn-info:hover, body .btn-info:focus {
+    background-color: #075574 !important;
+    border-color: #075574 !important;
+}
