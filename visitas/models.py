@@ -38,11 +38,11 @@ class Visita(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     def clean(self):
-        if not self.animal and not self.nome_animal_nao_cadastrado:
+        if not self.animal_id and not self.nome_animal_nao_cadastrado:
             raise ValidationError('Informe um animal cadastrado ou escreva o nome do animal não cadastrado.')
 
-        if self.animal and self.tutor and self.animal.tutor != self.tutor:
-            raise ValidationError('O animal selecionado não pertence ao tutor informado.')
+        if self.animal_id and self.tutor_id and self.animal.tutor_id != self.tutor_id:
+            raise ValidationError({'animal': 'O animal selecionado não pertence ao tutor informado.'})
 
     class Meta:
         verbose_name = 'Visita'

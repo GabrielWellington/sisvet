@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 class Tutor(models.Model):
@@ -68,18 +69,20 @@ class Animal(models.Model):
         if self.especie != 'OUTRO':
             self.especie_outro = None
 
-    def marcar_como_falecido(self, origem, tipo, motivo=None, observacoes=None):
+    def marcar_como_falecido(self, origem, tipo, motivo=None, observacoes=None, data_obito=None):
+        """Registra o óbito do animal (no máximo um por animal) e atualiza o status."""
         self.status = 'FALECIDO'
-        self.save()
+        self.save(update_fields=['status'])
 
         ObitoAnimal.objects.update_or_create(
             animal=self,
-            origem=origem,
             defaults={
                 'tutor': self.tutor,
+                'origem': origem,
                 'tipo': tipo,
                 'motivo': motivo,
                 'observacoes': observacoes,
+                'data_obito': data_obito or timezone.localdate(),
             }
         )
 
@@ -125,7 +128,11 @@ class ObitoAnimal(models.Model):
         verbose_name='Tutor'
     )
 
-    data_obito = models.DateField(auto_now_add=True, verbose_name='Data do óbito')
+    data_obito = models.DateField(
+        default=timezone.localdate,
+        verbose_name='Data do óbito',
+        help_text='Data em que o óbito ocorreu (pode ser diferente da data de registro).'
+    )
 
     origem = models.CharField(
         max_length=20,
@@ -147,6 +154,21 @@ class ObitoAnimal(models.Model):
         verbose_name_plural = 'Óbitos de animais'
         ordering = ['-data_obito']
 
+    def clean(self):
+        erros = {}
+        if self.animal_id:
+            repetido = ObitoAnimal.objects.filter(animal_id=self.animal_id)
+            if self.pk:
+                repetido = repetido.exclude(pk=self.pk)
+            if repetido.exists():
+                erros['animal'] = 'Já existe um óbito registrado para este animal.'
+            if self.tutor_id and self.animal.tutor_id != self.tutor_id:
+                erros['tutor'] = 'O tutor informado não é o tutor deste animal.'
+        if self.data_obito and self.data_obito > timezone.localdate():
+            erros['data_obito'] = 'A data do óbito não pode estar no futuro.'
+        if erros:
+            raise ValidationError(erros)
+
     def __str__(self):
-        return f'{self.animal.nome} - {self.get_tipo_display()}'
+        return f'{self.animal} - {self.get_tipo_display()}'
     

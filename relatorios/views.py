@@ -173,6 +173,37 @@ def relatorio_geral(request):
     return render(request, 'relatorios/relatorio_geral.html', {})
 
 
+# Critério único usado em todos os relatórios para contar uma castração como
+# efetivada: o procedimento registrado como Realizada ou o animal que Compareceu.
+STATUS_CASTRACAO_EFETIVADA = ('REALIZADA', 'COMPARECEU')
+
+ANO_MINIMO = 2000
+
+
+def _ano_valido(valor, padrao):
+    """Converte o ano recebido pela URL; anos inválidos voltam ao padrão."""
+    try:
+        ano = int(valor)
+    except (TypeError, ValueError):
+        return padrao
+    if ANO_MINIMO <= ano <= timezone.now().year + 1:
+        return ano
+    return padrao
+
+
+def _ler_mes_ano(request):
+    """Lê ?mes= e ?ano= da requisição, usando o mês atual quando inválidos."""
+    hoje = timezone.now().date()
+    try:
+        mes = int(request.GET.get('mes', hoje.month))
+        if not 1 <= mes <= 12:
+            raise ValueError
+    except (TypeError, ValueError):
+        mes = hoje.month
+    ano = _ano_valido(request.GET.get('ano', hoje.year), hoje.year)
+    return mes, ano
+
+
 MESES_NOMES = [
     '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -212,7 +243,7 @@ def _coleta_dados_castracoes(mes_selecionado, ano_selecionado):
     else:
         taxa_comparecimento = 0
 
-    castracoes_realizadas = castracoes_mes.filter(status__in=['REALIZADA', 'COMPARECEU']).select_related('animal')
+    castracoes_realizadas = castracoes_mes.filter(status__in=STATUS_CASTRACAO_EFETIVADA).select_related('animal')
     cao_macho = castracoes_realizadas.filter(animal__especie='CAO', animal__sexo='MACHO').count()
     cao_femea = castracoes_realizadas.filter(animal__especie='CAO', animal__sexo='FEMEA').count()
     gato_macho = castracoes_realizadas.filter(animal__especie='GATO', animal__sexo='MACHO').count()
@@ -235,7 +266,7 @@ def _coleta_dados_castracoes(mes_selecionado, ano_selecionado):
     for c in castracoes_periodo:
         chave = c.data_agendada.strftime('%m/%Y')
         if chave in historico:
-            if c.status in ['REALIZADA', 'COMPARECEU']:
+            if c.status in STATUS_CASTRACAO_EFETIVADA:
                 historico[chave]['realizadas'] += 1
             elif c.status == 'FALTOU':
                 historico[chave]['faltas'] += 1
@@ -286,17 +317,8 @@ def _coleta_dados_castracoes(mes_selecionado, ano_selecionado):
 
 @login_required
 def detalhes_castracoes(request):
-    hoje = timezone.now().date()
-
     # Mês/ano escolhido pelo usuário via ?mes=8&ano=2026, com o mês atual como padrão
-    try:
-        mes_selecionado = int(request.GET.get('mes', hoje.month))
-        ano_selecionado = int(request.GET.get('ano', hoje.year))
-        if mes_selecionado < 1 or mes_selecionado > 12:
-            raise ValueError
-    except (TypeError, ValueError):
-        mes_selecionado = hoje.month
-        ano_selecionado = hoje.year
+    mes_selecionado, ano_selecionado = _ler_mes_ano(request)
 
     contexto = {**admin.site.each_context(request),
                 **_coleta_dados_castracoes(mes_selecionado, ano_selecionado)}
@@ -308,15 +330,7 @@ def exportar_castracoes_docx(request):
     """Gera o relatório de castrações do mês/ano filtrado em .docx,
     espelhando os números mostrados na tela de Detalhes de Castrações.
     """
-    hoje = timezone.now().date()
-    try:
-        mes_selecionado = int(request.GET.get('mes', hoje.month))
-        ano_selecionado = int(request.GET.get('ano', hoje.year))
-        if mes_selecionado < 1 or mes_selecionado > 12:
-            raise ValueError
-    except (TypeError, ValueError):
-        mes_selecionado = hoje.month
-        ano_selecionado = hoje.year
+    mes_selecionado, ano_selecionado = _ler_mes_ano(request)
 
     d = _coleta_dados_castracoes(mes_selecionado, ano_selecionado)
     mes_nome = d['mes_nome_selecionado'].upper()
@@ -387,7 +401,7 @@ def exportar_castracoes_docx(request):
     run.bold = True
     run.font.size = Pt(10)
     run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-    run2 = p.add_run(f'{taxa}%')
+    run2 = p.add_run(f'{taxa}%'.replace('.', ','))
     run2.bold = True
     run2.font.size = Pt(14)
     run2.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
@@ -395,7 +409,7 @@ def exportar_castracoes_docx(request):
     doc.add_paragraph()
 
     # --- Castrações por espécie e sexo ---
-    _titulo_secao(doc, 'Castrações realizadas por espécie e sexo')
+    _titulo_secao(doc, 'Castrações efetivadas por espécie e sexo (realizada ou compareceu)')
     especie_labels = ['Cães machos', 'Cadelas', 'Gatos machos', 'Gatas']
     especie_valores = [d['cao_macho'], d['cao_femea'], d['gato_macho'], d['gato_femea']]
     tabela_especie = doc.add_table(rows=2, cols=4)
@@ -407,7 +421,7 @@ def exportar_castracoes_docx(request):
 
     doc.add_paragraph()
     p = doc.add_paragraph()
-    run = p.add_run(f'Período: {d["manha_mes"]} realizadas pela manhã  •  {d["tarde_mes"]} realizadas à tarde')
+    run = p.add_run(f'Período: {d["manha_mes"]} efetivadas pela manhã  •  {d["tarde_mes"]} efetivadas à tarde')
     run.font.size = Pt(9)
     run.italic = True
 
@@ -519,7 +533,7 @@ def _coleta_dados_mes(ano, mes):
     castracoes_realizadas = Castracao.objects.filter(
         data_agendada__gte=primeiro_dia,
         data_agendada__lte=ultimo_dia,
-        status='REALIZADA',
+        status__in=STATUS_CASTRACAO_EFETIVADA,
     ).select_related('animal')
 
     cao_macho = castracoes_realizadas.filter(animal__especie='CAO', animal__sexo='MACHO').count()
@@ -588,7 +602,7 @@ def _sombrear_celula(cell, cor_hex='D9D9D9'):
 
 @login_required
 def gerar_resumo_anual(request):
-    ano = int(request.GET.get('ano', timezone.now().year))
+    ano = _ano_valido(request.GET.get('ano'), timezone.now().year)
 
     dados_meses = {}
     for mes in range(1, 13):
@@ -609,11 +623,8 @@ def gerar_resumo_anual(request):
     quad2 = soma_quadrimestre([5, 6, 7, 8])
     quad3 = soma_quadrimestre([9, 10, 11, 12])
 
-    anual_total_animais = sum([
-        quad1['cao_macho'], quad1['cao_femea'], quad1['gato_macho'], quad1['gato_femea'],
-        quad2['cao_macho'], quad2['cao_femea'], quad2['gato_macho'], quad2['gato_femea'],
-        quad3['cao_macho'], quad3['cao_femea'], quad3['gato_macho'], quad3['gato_femea'],
-    ])
+    # O total anual usa a mesma composição dos totais mensais e quadrimestrais.
+    anual_total_animais = quad1['total_animais'] + quad2['total_animais'] + quad3['total_animais']
 
     doc = Document()
 
@@ -764,16 +775,18 @@ def gerar_resumo_anual(request):
             cao_f = quad1['cao_femea'] + quad2['cao_femea'] + quad3['cao_femea']
             gato_m = quad1['gato_macho'] + quad2['gato_macho'] + quad3['gato_macho']
             gato_f = quad1['gato_femea'] + quad2['gato_femea'] + quad3['gato_femea']
-            _set_cell_text(row.cells[1], '', size=8)
-            _set_cell_text(row.cells[2], '', size=8)
+            def soma(chave):
+                return quad1[chave] + quad2[chave] + quad3[chave]
+            _set_cell_text(row.cells[1], _formatar(soma('visitas_urbana')), bold=True, size=8)
+            _set_cell_text(row.cells[2], _formatar(soma('visitas_rural')), bold=True, size=8)
             _set_cell_text(row.cells[3], _formatar(cao_m), bold=True, size=8)
             _set_cell_text(row.cells[4], _formatar(cao_f), bold=True, size=8)
             _set_cell_text(row.cells[5], _formatar(gato_m), bold=True, size=8)
             _set_cell_text(row.cells[6], _formatar(gato_f), bold=True, size=8)
-            _set_cell_text(row.cells[7], '', size=8)
-            _set_cell_text(row.cells[8], '', size=8)
-            _set_cell_text(row.cells[9], '', size=8)
-            _set_cell_text(row.cells[10], '', size=8)
+            _set_cell_text(row.cells[7], _formatar(soma('vacinacao_rotina')), bold=True, size=8)
+            _set_cell_text(row.cells[8], '-', size=8)
+            _set_cell_text(row.cells[9], _formatar(soma('animais_atendidos')), bold=True, size=8)
+            _set_cell_text(row.cells[10], '-', size=8)
             for c in row.cells:
                 _sombrear_celula(c, 'BFBFBF')
 

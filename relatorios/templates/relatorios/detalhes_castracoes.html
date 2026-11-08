@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="dashboard-container castracoes-page">
-    <a href="/" class="voltar">← Voltar ao Dashboard</a>
+    <a href="/admin/" class="voltar">← Voltar ao painel</a>
     <h1 class="dashboard-titulo">Detalhes de Castrações</h1>
     <p class="resumo-periodo">Acompanhe os agendamentos e resultados de {{ mes_nome_selecionado }} de {{ ano_selecionado }}.</p>
 
@@ -34,6 +34,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Aplicar filtros</button>
         <a class="btn btn-outline-primary exportar-relatorio" href="{% url 'exportar_castracoes_docx' %}?mes={{ mes_selecionado }}&amp;ano={{ ano_selecionado }}">Baixar relatório (Word)</a>
+        <a class="btn btn-outline-secondary exportar-relatorio" href="{% url 'relatorio_anual' %}?ano={{ ano_selecionado }}">Resumo anual {{ ano_selecionado }} (Word)</a>
     </form>
 
     <!-- Card destaque: taxa de comparecimento -->
@@ -85,7 +86,8 @@
     </div>
 
     <!-- Cards de espécie e sexo -->
-    <h2 class="secao-titulo">🐾 Castrações realizadas por espécie e sexo</h2>
+    <h2 class="secao-titulo">🐾 Castrações efetivadas por espécie e sexo</h2>
+    <p class="resumo-periodo">Considera os agendamentos com status Realizada ou Compareceu.</p>
     <div class="cards-grid">
         <div class="card-contador azul">
             <div class="titulo">🐕 Cães machos</div>
@@ -118,7 +120,7 @@
         </div>
 
         <div class="grafico-card" style="grid-column: 1 / -1;">
-            <h3>📈 Histórico — últimos 6 meses (realizadas vs faltas)</h3>
+            <h3>📈 Histórico — últimos 6 meses (efetivadas vs faltas)</h3>
             <div class="grafico-area"><canvas role="img" aria-label="Gráfico de castrações" id="grafico-historico"></canvas></div>
         </div>
     </div>
@@ -144,7 +146,7 @@
                         <tr>
                             <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
                             <td>{{ c.get_periodo_display }}</td>
-                            <td>{{ c.animal.nome }}</td>
+                            <td>{{ c.animal.nome|default:"(sem nome)" }}</td>
                             <td>{{ c.tutor.nome }}</td>
                             <td>{{ c.tutor.telefone|default:"—" }}</td>
                         </tr>
@@ -174,7 +176,7 @@
                         <tr>
                             <td>{{ c.data_agendada|date:"d/m/Y" }}</td>
                             <td>{{ c.get_periodo_display }}</td>
-                            <td>{{ c.animal.nome }}</td>
+                            <td>{{ c.animal.nome|default:"(sem nome)" }}</td>
                             <td>{{ c.tutor.nome }}</td>
                         </tr>
                         {% endfor %}
@@ -226,7 +228,7 @@ new Chart(document.getElementById('grafico-historico'), {
         labels: {{ historico_labels|safe }},
         datasets: [
             {
-                label: 'Realizadas',
+                label: 'Efetivadas',
                 data: {{ historico_realizadas|safe }},
                 backgroundColor: '#4ade80',
             },

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from cadastros.models import Tutor, Animal
 
 
@@ -21,5 +22,9 @@ class Documento(models.Model):
         verbose_name = 'Documento'
         verbose_name_plural = 'Documentos'
 
+    def clean(self):
+        if self.animal_id and self.tutor_id and self.animal.tutor_id != self.tutor_id:
+            raise ValidationError({'animal': 'O animal selecionado não pertence ao tutor informado.'})
+
     def __str__(self):
-        return f'{self.get_tipo_display()} - {self.animal.nome}'
+        return f'{self.get_tipo_display()} - {self.animal}'
