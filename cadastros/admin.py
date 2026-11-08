@@ -135,8 +135,18 @@ class AnimalAdmin(admin.ModelAdmin):
         return [AtendimentoInline, CastracaoInline, DocumentoInline, VisitaInline, ObitoInline]
 
     def get_queryset(self, request):
+        """Mostra só animais ativos na listagem padrão e nas buscas de seleção.
+
+        A ficha de um animal falecido continua acessível pelo link direto e pelo
+        filtro "Status: Falecido" da listagem, preservando o histórico.
+        """
         qs = super().get_queryset(request)
-        return qs.filter(status='ATIVO')
+        rota = getattr(getattr(request, 'resolver_match', None), 'url_name', '')
+        if rota == 'autocomplete':
+            return qs.filter(status='ATIVO')
+        if rota == 'cadastros_animal_changelist' and 'status__exact' not in request.GET:
+            return qs.filter(status='ATIVO')
+        return qs
 
     def get_search_results(self, request, queryset, search_term):
         queryset, may_have_duplicates = super().get_search_results(
@@ -159,7 +169,9 @@ class ObitoAnimalAdmin(admin.ModelAdmin):
         js = ('js/filtra_animais_por_tutor.js',)
 
     def save_model(self, request, obj, form, change):
+        if not obj.tutor_id and obj.animal_id:
+            obj.tutor_id = obj.animal.tutor_id
         super().save_model(request, obj, form, change)
-        if obj.animal and obj.animal.status != 'FALECIDO':
+        if obj.animal.status != 'FALECIDO':
             obj.animal.status = 'FALECIDO'
-            obj.animal.save() 
+            obj.animal.save(update_fields=['status'])

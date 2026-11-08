@@ -131,6 +131,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# As páginas de relatório protegidas redirecionam para o login do painel.
+LOGIN_URL = '/admin/login/'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -147,7 +150,7 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bem-vindo ao SisVet Promissão",
 
     "topmenu_links": [
-        {"name": "Dashboard", "url": "/", "icon": "fas fa-tachometer-alt"},
+        {"name": "Início", "url": "/admin/", "icon": "fas fa-home"},
         {"name": "Detalhes de Castrações", "url": "/detalhes-castracoes/", "icon": "fas fa-cut"},
     ],
 

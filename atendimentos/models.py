@@ -52,7 +52,7 @@ class Atendimento(models.Model):
         verbose_name_plural = 'Atendimentos'
 
     def __str__(self):
-        return f'{self.animal.nome} - {self.data_atendimento.strftime("%d/%m/%Y")}'
+        return f'{self.animal} - {self.data_atendimento.strftime("%d/%m/%Y")}'
 
 
 class FotoAtendimento(models.Model):
@@ -71,4 +71,4 @@ class FotoAtendimento(models.Model):
         verbose_name_plural = 'Fotos dos atendimentos'
 
     def __str__(self):
-        return f'Foto - {self.atendimento.animal.nome}'
+        return f'Foto - {self.atendimento.animal}'

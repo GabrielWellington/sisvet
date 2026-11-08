@@ -28,12 +28,14 @@ class Castracao(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
 
     def clean(self):
-        if self.animal and self.tutor and self.animal.tutor != self.tutor:
-            raise ValidationError('O animal selecionado não pertence ao tutor informado.')
+        # Usa os identificadores (_id) para não acessar uma relação ainda vazia,
+        # o que provocaria exceção quando tutor ou animal não forem informados.
+        if self.animal_id and self.tutor_id and self.animal.tutor_id != self.tutor_id:
+            raise ValidationError({'animal': 'O animal selecionado não pertence ao tutor informado.'})
 
     class Meta:
         verbose_name = 'Castração'
         verbose_name_plural = 'Castrações'
 
     def __str__(self):
-        return f'{self.animal.nome} - {self.data_agendada.strftime("%d/%m/%Y")} - {self.get_periodo_display()}'
+        return f'{self.animal} - {self.data_agendada.strftime("%d/%m/%Y")} - {self.get_periodo_display()}'

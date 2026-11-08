@@ -21,7 +21,6 @@ class CastracaoAdmin(admin.ModelAdmin):
         js = ('js/filtra_animais_por_tutor.js',)
 
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "animal":
-            kwargs["queryset"] = db_field.remote_field.model.objects.filter(status='ATIVO')
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    # A seleção de animais pelo campo de busca (autocomplete) já lista apenas
+    # animais ativos (ver AnimalAdmin.get_queryset). O formulário aceita o animal
+    # já gravado, permitindo editar registros antigos de animais que faleceram.
